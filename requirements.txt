@@ -12,4 +12,4 @@ wordcloud
 transformers
 
 # CPU-only PyTorch (lighter weight)
-torch
+--extra-index-url https://download.pytorch.org/whl/cpu
