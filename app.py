@@ -1,7 +1,7 @@
 """
 Streamlit Web Application for E-commerce Sentiment Analysis
 Displays products, testimonials, and reviews with sentiment analysis
-Modern UI with async scraping and dynamic month detection
+Modern UI with dynamic month detection
 """
 
 import streamlit as st
@@ -13,8 +13,7 @@ import plotly.graph_objects as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 
-# Import sentiment analysis module
-from analysis.sentiment import analyze_reviews, get_sentiment_summary
+# NOTE: Sentiment analysis is imported lazily in display_reviews() to speed up startup
 
 # Page configuration
 st.set_page_config(
@@ -388,10 +387,13 @@ def display_reviews():
     
     st.markdown("---")
     
-    # Perform sentiment analysis
+    # Perform sentiment analysis - lazy import to speed up app startup
     st.markdown(f"### 🤖 Sentiment Analysis for {selected_month}")
     
-    with st.spinner("🔄 Analyzing sentiments with HuggingFace Transformers..."):
+    with st.spinner("🔄 Loading model and analyzing sentiments..."):
+        # Lazy import - only load when user views Reviews
+        from analysis.sentiment import analyze_reviews, get_sentiment_summary
+        
         review_texts = tuple(r.get('text', '') for r in filtered_reviews)  # tuple for caching
         sentiments = analyze_reviews(review_texts)
     
@@ -486,8 +488,8 @@ def main():
     # Header
     st.markdown("# E-commerce Sentiment Analyzer")
     
-    # Navigation
-    page = st.sidebar.radio("Section", ["Reviews", "Products", "Testimonials"], index=0)
+    # Navigation - default to Products (faster startup, no model loading)
+    page = st.sidebar.radio("Section", ["Products", "Reviews", "Testimonials"], index=0)
     
     # Month filter for Reviews
     reviews = load_reviews()
