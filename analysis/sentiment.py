@@ -3,24 +3,35 @@ Sentiment Analysis module using HuggingFace Transformers
 Uses distilbert-base-uncased-finetuned-sst-2-english for classification
 """
 
-from transformers import pipeline
+import os
 import streamlit as st
 
+# Set cache directories before importing transformers
+os.environ['TRANSFORMERS_CACHE'] = '/tmp/transformers_cache'
+os.environ['HF_HOME'] = '/tmp/huggingface'
 
-@st.cache_resource
+from transformers import pipeline
+
+
+@st.cache_resource(show_spinner="Loading sentiment model...")
 def load_sentiment_model():
     """
     Load the sentiment analysis model with caching.
     Uses @st.cache_resource to load the model only once.
     """
-    print("Loading sentiment analysis model...")
-    classifier = pipeline(
-        "sentiment-analysis",
-        model="distilbert-base-uncased-finetuned-sst-2-english",
-        device="cpu"  # Use CPU for compatibility with Render free tier
-    )
-    print("Model loaded successfully!")
-    return classifier
+    try:
+        print("Loading sentiment analysis model...")
+        classifier = pipeline(
+            "sentiment-analysis",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
+            device=-1,  # Force CPU
+            model_kwargs={"low_cpu_mem_usage": True}
+        )
+        print("Model loaded successfully!")
+        return classifier
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return None
 
 
 def analyze_sentiment(text: str) -> dict:
@@ -34,6 +45,10 @@ def analyze_sentiment(text: str) -> dict:
         dict with 'label' (POSITIVE/NEGATIVE) and 'score' (confidence)
     """
     classifier = load_sentiment_model()
+    
+    if classifier is None:
+        # Fallback if model failed to load
+        return {"label": "UNKNOWN", "score": 0.0}
     
     # Truncate text if too long (model has max token limit)
     if len(text) > 512:
@@ -60,11 +75,20 @@ def analyze_reviews(texts: tuple) -> list:
     """
     classifier = load_sentiment_model()
     
+    if classifier is None:
+        # Fallback if model failed to load
+        return [{"label": "UNKNOWN", "score": 0.0} for _ in texts]
+    
     # Convert tuple back to list and truncate texts if too long
     truncated_texts = [t[:512] if len(t) > 512 else t for t in texts]
     
-    # Process in batches for efficiency
-    results = classifier(truncated_texts)
+    # Process in smaller batches to reduce memory usage
+    results = []
+    batch_size = 8
+    for i in range(0, len(truncated_texts), batch_size):
+        batch = truncated_texts[i:i+batch_size]
+        batch_results = classifier(batch)
+        results.extend(batch_results)
     
     return [
         {
