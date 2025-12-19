@@ -24,6 +24,22 @@ st.set_page_config(
 # Modern CSS Styling
 st.markdown("""
 <style>
+    /* Hide stale/loading elements completely instead of graying out */
+    [data-stale="true"], .stale-element, .element-container[data-stale="true"] {
+        display: none !important;
+    }
+    
+    /* Or alternatively, just hide the opacity effect */
+    .main .block-container {
+        opacity: 1 !important;
+    }
+    
+    /* Disable Streamlit animations */
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+    
     /* Main background and fonts */
     .main {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -513,13 +529,17 @@ def main():
     testimonials = load_testimonials()
     st.sidebar.caption(f"Data: {len(products)} products, {len(reviews)} reviews, {len(testimonials)} testimonials")
     
-    # Display selected section
-    if page == "Products":
-        display_products()
-    elif page == "Testimonials":
-        display_testimonials()
-    else:
-        display_reviews()
+    # Display selected section - use container with key to prevent fade effect
+    selected_month = st.session_state.get('selected_month', '')
+    content_key = f"{page}_{selected_month}"
+    
+    with st.container(key=content_key):
+        if page == "Products":
+            display_products()
+        elif page == "Testimonials":
+            display_testimonials()
+        else:
+            display_reviews()
 
 
 if __name__ == "__main__":
