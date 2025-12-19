@@ -1,7 +1,5 @@
 """
 Streamlit Web Application for E-commerce Sentiment Analysis
-Displays products, testimonials, and reviews with sentiment analysis
-Modern UI with dynamic month detection
 """
 
 import streamlit as st
@@ -10,10 +8,6 @@ import json
 import os
 from collections import Counter
 import plotly.graph_objects as go
-from wordcloud import WordCloud
-import matplotlib.pyplot as plt
-
-# NOTE: Sentiment analysis is imported lazily in display_reviews() to speed up startup
 
 # Page configuration
 st.set_page_config(
@@ -436,30 +430,15 @@ def display_reviews():
     )
     st.plotly_chart(fig_bar, width='stretch')
     
-    # Word Cloud
+    # Word Cloud - using st.image instead of matplotlib
     st.markdown("---")
     st.markdown("### ☁️ Word Cloud")
-    st.markdown("*Visual representation of the most common words in reviews*")
     
     all_text = ' '.join(review_texts)
-    
     if all_text.strip():
-        wordcloud = WordCloud(
-            width=1200,
-            height=400,
-            background_color='white',
-            colormap='plasma',
-            max_words=100,
-            min_font_size=12,
-            max_font_size=80,
-            random_state=42
-        ).generate(all_text)
-        
-        fig_wc, ax = plt.subplots(figsize=(12, 4))
-        ax.imshow(wordcloud, interpolation='bilinear')
-        ax.axis('off')
-        st.pyplot(fig_wc)
-        plt.close(fig_wc)
+        from wordcloud import WordCloud
+        wc = WordCloud(width=800, height=300, background_color='white', colormap='viridis').generate(all_text)
+        st.image(wc.to_array(), width='stretch')
     
     # Reviews table
     st.markdown("---")

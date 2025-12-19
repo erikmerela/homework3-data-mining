@@ -1,21 +1,15 @@
 # Streamlit web application
-streamlit>=1.28.0
+streamlit
 
 # Data handling
-pandas>=2.0.0
+pandas
 
 # Visualization
-plotly>=5.18.0
-matplotlib>=3.8.0
-wordcloud>=1.9.0
+plotly
+wordcloud
 
 # Machine Learning / Sentiment Analysis
-transformers>=4.35.0
+transformers
 
-# Web scraping (using Selenium)
-selenium>=4.15.0
-webdriver-manager>=4.0.0
-
-# CPU-only PyTorch for Render deployment (lighter weight)
---extra-index-url https://download.pytorch.org/whl/cpu
+# CPU-only PyTorch (lighter weight)
 torch
